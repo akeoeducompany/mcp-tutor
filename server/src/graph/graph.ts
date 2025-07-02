@@ -156,7 +156,7 @@ type EnhancedState = typeof EnhancedAnnotation.State;
 /* ---------------------- Conditional Logic ---------------------------- */
 
 function shouldProceedToSearch(state: EnhancedState): string {
-  // 스미싱 메시지로 판단되면 검색 쿼리 생성으로 진행
+  // 코딩 질문으로 판단되면 검색 쿼리 생성으로 진행
   if (state.is_request_specific) {
     return "generate_queries";
   }
