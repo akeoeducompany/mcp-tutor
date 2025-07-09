@@ -4,6 +4,19 @@ import TutoringHeader from '@/components/TutoringHeader';
 import ProgressSidebar from '@/components/ProgressSidebar';
 import CodeEditor from '@/components/CodeEditor';
 import ChatSidebar from '@/components/ChatSidebar';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Button } from '@/components/ui/button';
+import { PanelLeft, PanelRight } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface Problem {
   id: string;
@@ -25,6 +38,8 @@ const Tutoring = () => {
   const navigate = useNavigate();
   const selectedTopics = location.state?.selectedTopics || ['list'];
   
+  const [isProgressSidebarExpanded, setIsProgressSidebarExpanded] = useState(false);
+  const [showEndSessionAlert, setShowEndSessionAlert] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [currentProblemId, setCurrentProblemId] = useState('1');
   const [output, setOutput] = useState('');
@@ -133,20 +148,25 @@ const Tutoring = () => {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      <TutoringHeader onEndSession={handleEndSession} elapsedTime={elapsedTime} />
+      <TutoringHeader 
+        onEndSession={() => setShowEndSessionAlert(true)}
+        elapsedTime={elapsedTime}
+      />
       
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Progress */}
-        <div className="w-56 p-3 overflow-y-auto">
+        <div className={`transition-all duration-300 ${isProgressSidebarExpanded ? 'w-64' : 'w-20'} p-2 border-r`}>
           <ProgressSidebar
             currentTopic={selectedTopics[0]}
             problems={problems}
             onProblemClick={handleProblemClick}
             currentProblemId={currentProblemId}
+            isExpanded={isProgressSidebarExpanded}
+            onToggle={() => setIsProgressSidebarExpanded(prev => !prev)}
           />
         </div>
 
-        {/* Center - Code Editor (increased space) */}
+        {/* Center - Code Editor */}
         <div className="flex-1 p-3 overflow-y-auto">
           <CodeEditor
             problem={currentProblem}
@@ -157,13 +177,28 @@ const Tutoring = () => {
         </div>
 
         {/* Right Sidebar - Chat */}
-        <div className="w-72 p-3 overflow-y-auto">
+        <div className="w-[450px] p-3 overflow-y-auto">
           <ChatSidebar
             messages={messages}
             onSendMessage={handleSendMessage}
           />
         </div>
       </div>
+
+      <AlertDialog open={showEndSessionAlert} onOpenChange={setShowEndSessionAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>튜터링을 종료하시겠습니까?</AlertDialogTitle>
+            <AlertDialogDescription>
+              지금까지의 학습 기록은 리포트로 저장됩니다. 정말로 세션을 종료하시겠어요?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEndSession}>종료하기</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -64,7 +64,7 @@ const ChatSidebar = ({ messages, onSendMessage }: ChatSidebarProps) => {
                 ? 'bg-blue-500 text-white' 
                 : 'bg-gray-100 text-gray-800'
             }`}>
-              <div className="text-xs whitespace-pre-wrap">{message.content}</div>
+              <div className="text-sm whitespace-pre-wrap">{message.content}</div>
               <div className={`text-xs mt-1 ${
                 message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
               }`}>
