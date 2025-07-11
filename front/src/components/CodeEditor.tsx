@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Clock, Database, Play, CheckCircle, XCircle, Loader2, Star, ChevronDown, ChevronUp } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 interface CodeEditorProps {
   problem: {
@@ -29,6 +30,11 @@ const CodeEditor = ({ problem, onRunCode, onSubmitCode, output }: CodeEditorProp
     feedback: string;
     testCases: { input: string; expected: string; actual: string; passed: boolean }[];
   } | null>(null);
+
+  useEffect(() => {
+    // 문제 변경 시 코드 초기화
+    setCode(problem.initialCode || '# 여기에 코드를 작성하세요\n');
+  }, [problem]);
 
   const handleSubmit = () => {
     setShowGradingModal(true);
@@ -76,99 +82,116 @@ const CodeEditor = ({ problem, onRunCode, onSubmitCode, output }: CodeEditorProp
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Problem Description with integrated Input/Output/Example */}
-      <Card className="p-4 mb-3 bg-white border-l-4 border-l-yellow-400">
-        <div className="flex items-center gap-2 mb-2">
-          <h3 className="font-semibold text-gray-800 text-base">{problem.title}</h3>
-          <div className="flex items-center gap-3 ml-auto text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              <span>3000 ms</span>
+    <div className="h-full flex flex-col gap-4">
+      {/* Problem Description */}
+      <Card className="shadow-sm border-gray-200">
+        <CardHeader className="p-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="text-lg font-bold text-gray-800">{problem.title}</CardTitle>
+              <p className="text-sm text-gray-600 mt-2 leading-relaxed">{problem.description}</p>
             </div>
-            <div className="flex items-center gap-1">
-              <Database className="w-3 h-3" />
-              <span>128 MB</span>
+            <div className="flex items-center gap-4 text-xs text-gray-500 flex-shrink-0 ml-4">
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4" />
+                <span>3000 ms</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Database className="w-4 h-4" />
+                <span>128 MB</span>
+              </div>
             </div>
           </div>
-        </div>
-        <p className="text-gray-700 leading-relaxed mb-3 text-sm">{problem.description}</p>
-        
-        <div className="bg-gray-50 p-2.5 rounded-lg">
-          <div className="grid grid-cols-2 gap-4 text-xs">
-            <div>
-              <div className="font-medium text-gray-600 mb-1 text-xs">📥 Input Example 1</div>
-              <div className="bg-white p-1.5 rounded border text-gray-500 font-mono">-</div>
-            </div>
-            <div>
-              <div className="font-medium text-gray-600 mb-1 text-xs">📤 Output Example 1</div>
-              <div className="bg-white p-1.5 rounded border text-gray-500 font-mono">ABCDEFGHIJKLMNOPQRSTUVWXY</div>
-            </div>
-          </div>
-        </div>
+        </CardHeader>
+        <CardContent className="px-4 pb-4 border-t">
+           <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="item-1">
+              <AccordionTrigger className="text-sm font-medium py-3">입출력 예시 보기</AccordionTrigger>
+              <AccordionContent>
+                <div className="grid grid-cols-2 gap-4 text-xs mt-2">
+                  <div>
+                    <div className="font-semibold text-gray-700 mb-1">📥 Input Example 1</div>
+                    <div className="bg-gray-100 p-2 rounded border text-gray-600 font-mono">-</div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-700 mb-1">📤 Output Example 1</div>
+                    <div className="bg-gray-100 p-2 rounded border text-gray-600 font-mono">ABCDEFGHIJKLMNOPQRSTUVWXY</div>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
       </Card>
-
-      {/* Code Editor Section with integrated Test */}
-      <Card className="flex-1 bg-gray-900 text-white flex flex-col">
-        <div className="flex items-center justify-between p-2.5 border-b border-gray-700">
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium text-sm">Give it a try!</h3>
+      
+      {/* Code Editor Section */}
+      <Card className="flex-1 bg-gray-800 text-white flex flex-col shadow-lg border-gray-700">
+        <div className="flex items-center justify-between p-3 border-b border-gray-700/80">
+          <div className="flex items-center gap-3">
+            <h3 className="font-bold text-base text-gray-200">Give it a try!</h3>
             <div className="flex text-yellow-400">
-              <Star className="w-4 h-4 fill-current" />
-              <Star className="w-4 h-4 fill-current" />
-              <Star className="w-4 h-4 fill-current" />
+              {[...Array(3)].map((_, i) => (
+                <Star key={i} className="w-4 h-4 fill-current" />
+              ))}
+              {[...Array(2)].map((_, i) => (
+                <Star key={i+3} className="w-4 h-4 fill-gray-600" />
+              ))}
             </div>
           </div>
-          <Button
-            onClick={handleSubmit}
-            size="sm"
-            className="bg-red-600 hover:bg-red-700 text-xs px-4 h-7"
-          >
-            Submit
-          </Button>
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 relative">
           <Textarea
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="w-full h-full bg-transparent border-none resize-none font-mono text-sm p-3 text-white focus:ring-0"
-            placeholder="여기에 코드를 작성하세요..."
+            className="w-full h-full bg-gray-800 border-none resize-none font-mono text-sm p-4 text-gray-100 focus-visible:ring-0 focus-visible:ring-offset-0"
+            placeholder="코드를 이곳에 작성하세요..."
           />
         </div>
 
         {/* Footer / Test Section */}
-        <div className="border-t border-gray-700">
-          <div className="flex items-center justify-between p-2">
-            <button onClick={() => setIsTestVisible(!isTestVisible)} className="flex items-center gap-2 text-xs font-medium hover:bg-gray-800 p-1 rounded">
-              Test it out
+        <div className="border-t border-gray-700/80 bg-gray-800/50">
+          <div className="flex items-center justify-between p-2.5">
+            <button onClick={() => setIsTestVisible(!isTestVisible)} className="flex items-center gap-2 text-xs font-medium text-gray-400 hover:text-white hover:bg-gray-700 p-2 rounded-md">
+              Test with custom input
               {isTestVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
                <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger className="w-28 bg-gray-800 border-gray-600 text-xs h-7">
+                <SelectTrigger className="w-32 bg-gray-700 border-gray-600 text-xs h-8">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-gray-700 text-white border-gray-600">
                   <SelectItem value="python">Python</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={handleTestRun} size="sm" variant="outline" className="border-gray-600 h-7 text-xs">
-                <Play className="w-3 h-3 mr-1" />
+              <Button 
+                onClick={handleSubmit} 
+                size="sm"
+                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold h-8 text-xs px-4 rounded-md shadow-lg transition-transform transform hover:scale-105"
+              >
+                <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                채점 요청
+              </Button>
+              <Button 
+                onClick={handleTestRun} 
+                size="sm" 
+                className="bg-gray-700 hover:bg-gray-600 text-white h-8 text-xs font-semibold px-4"
+              >
+                <Play className="w-3 h-3 mr-1.5" />
                 Run
               </Button>
             </div>
           </div>
           {isTestVisible && (
-            <div className="p-2.5 border-t border-gray-700">
-              <input
-                type="text"
+            <div className="p-3 border-t border-gray-700/80 bg-gray-700/60">
+              <textarea
                 value={testInput}
                 onChange={(e) => setTestInput(e.target.value)}
-                placeholder="테스트 케이스 입력"
-                className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs mb-2"
+                placeholder="테스트 케이스를 위한 입력을 여기에 작성하세요."
+                className="w-full bg-gray-800 border border-gray-600 rounded-md px-3 py-2 text-xs mb-2 resize-none h-20 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
-              <div className="bg-gray-800 p-2 rounded text-xs min-h-[50px] max-h-[70px] overflow-y-auto">
+              <div className="bg-black/30 p-3 rounded-md text-xs min-h-[60px] max-h-[120px] overflow-y-auto font-mono">
                 <div className="text-gray-300 whitespace-pre-wrap">
                   {output || '코드를 실행하면 결과가 여기에 표시됩니다.'}
                 </div>

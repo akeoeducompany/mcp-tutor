@@ -8,19 +8,25 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "express": "^5.1.0",
-    "@langchain/langgraph": "^0.3.6",
-    "langchain": "^0.3.29",
     "@langchain/google-genai": "^0.2.14",
-    "pg": "^8.16.3",
+    "@langchain/langgraph": "^0.3.6",
+    "cors": "^2.8.5",
     "dotenv": "^17.0.1",
-    "cors": "^2.8.5"
+    "express": "^5.1.0",
+    "langchain": "^0.3.29",
+    "pg": "^8.16.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^4.6.3",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.4.4",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^20.11.19",
-    "@types/cors": "^2.8.19"
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/uuid": "^9.0.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.4"
   }
 }

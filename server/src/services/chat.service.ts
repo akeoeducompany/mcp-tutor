@@ -1,49 +1,79 @@
-import { smishing_analysis_graph } from "../graph/graph";
-import { HumanMessage } from "@langchain/core/messages";
+import { coding_tutor_graph } from "../graph/graph";
+import { constructUserMessage } from "../graph/prompts";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { sessions } from "../api/v1/sessions.routes";
 
-export async function invokeGraph(threadId: string, message: string) {
-  const startTime = Date.now();
+export const handleChatMessage = async (
+  sessionId: string,
+  message: string,
+  code: string
+) => {
+  const session = sessions.get(sessionId);
+  if (!session) {
+    throw new Error("Session not found");
+  }
+
+  const { userId, selectedTopics, persona, history } = session;
+
+  console.log(
+    `Processing chat for session: ${sessionId}, user: ${userId}, persona: ${persona}`
+  );
+
+  // TODO: Pass persona to the graph
+  const graphResponse = await coding_tutor_graph.invoke(
+    {
+      messages: [new HumanMessage(message)],
+      code,
+      topics: selectedTopics,
+    },
+    {
+      messages: [new HumanMessage(message)],
+      code,
+      topics: selectedTopics,
+    },
+  );
+
+  const tutorResponseText = graphResponse.response_to_user || "죄송합니다. 코딩과 관련된 질문만 답변해드릴 수 있어요. 어떤 것을 도와드릴까요?";
+
+  return {
+    response: {
+      sender: "tutor",
+      text: tutorResponseText,
+    },
+  };
+};
+
+export async function invokeGraph(threadId: string, message: string, code?: string) {
+  // For PoC, we ignore threadId persistence.
   
+  // prompt.ts의 헬퍼 함수를 사용해 사용자 메시지 객체를 생성합니다.
+  const userMessage = constructUserMessage(message);
+
+  const initialState = {
+    // userMessage가 null이 아닐 경우에만 배열에 담아 전달합니다.
+    messages: userMessage ? [userMessage] : [],
+    current_code: code,
+  };
+
   try {
-    // For PoC, we ignore threadId persistence.
-    const initialState = {
-      messages: [new HumanMessage(message)]
-    } as any;
+    const result = await coding_tutor_graph.invoke(initialState);
 
-    const result = await smishing_analysis_graph.invoke(initialState);
-    const processingTime = (Date.now() - startTime) / 1000;
+    const tutorResponseText = result.response_to_user || "죄송합니다. 코딩과 관련된 질문만 답변해드릴 수 있어요. 어떤 것을 도와드릴까요?";
 
-    // 스미싱으로 판단된 경우 검색 쿼리도 포함해서 응답
-    if (result.is_request_specific) {
-      return {
-        message: `스미싱 메시지를 분석했습니다.\n\n검색 쿼리 생성 완료:\n${(result.search_queries || []).map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}\n\n근거: ${result.search_rationale || ''}`,
-        thread_id: threadId,
-        sources: [],
-        processing_time: processingTime,
-        search_queries_used: result.search_queries || [],
-        is_clarification: false
-      };
-    } else {
-      return {
-        message: result.response_to_user || "스미싱 메시지만 리포트 작성 가능합니다.",
-        thread_id: threadId,
-        sources: [],
-        processing_time: processingTime,
-        search_queries_used: [],
-        is_clarification: true
-      };
-    }
+    return {
+      response: {
+        sender: "tutor",
+        text: tutorResponseText,
+      },
+    };
+
   } catch (error) {
     console.error("Graph invocation error:", error);
-    const processingTime = (Date.now() - startTime) / 1000;
-    
     return {
-      message: "죄송합니다. 처리 중 오류가 발생했습니다. 다시 시도해 주세요.",
-      thread_id: threadId,
-      sources: [],
-      processing_time: processingTime,
-      search_queries_used: [],
-      is_clarification: false
+      response: {
+        sender: "tutor",
+        text: "죄송합니다. 답변을 생성하는 중 오류가 발생했어요. 다시 시도해 주세요.",
+      },
     };
   }
 } 

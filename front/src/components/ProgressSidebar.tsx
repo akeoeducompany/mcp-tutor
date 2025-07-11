@@ -1,8 +1,20 @@
-import React from 'react';
-import { Card } from '@/components/ui/card';
-import { CheckCircle, Circle, PanelLeft, PanelRight } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import {
+  ChevronsLeft,
+  ChevronsRight,
+  User,
+  Book,
+  CheckCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import tutorImage from "@/assets/tutor1.png";
+import tutor2Image from "@/assets/tutor2.png";
+
+const personaImages = {
+  teacher: tutorImage,
+  professor: tutor2Image,
+};
 
 interface Problem {
   id: string;
@@ -11,76 +23,117 @@ interface Problem {
 }
 
 interface ProgressSidebarProps {
-  currentTopic: string;
-  problems: Problem[];
-  onProblemClick: (problemId: string) => void;
-  currentProblemId: string;
   isExpanded: boolean;
   onToggle: () => void;
+  currentTopic: string;
+  problems: Problem[];
+  currentProblemId: string;
+  onProblemSelect: (id: string) => void;
+  persona: 'teacher' | 'professor';
+  userId: string;
 }
 
-const ProgressSidebar = ({ currentTopic, problems, onProblemClick, currentProblemId, isExpanded, onToggle }: ProgressSidebarProps) => {
+const ProgressSidebar: React.FC<ProgressSidebarProps> = ({
+  isExpanded,
+  onToggle,
+  currentTopic,
+  problems,
+  currentProblemId,
+  onProblemSelect,
+  persona,
+  userId,
+}) => {
+  const selectedPersonaImage = personaImages[persona] || tutorImage;
+  const personaName = persona === 'teacher' ? '중학교 선생님' : '비전공자반 교수님';
+
   return (
-    <TooltipProvider>
-      <Card className={`h-full flex flex-col p-2 transition-all duration-300 ${isExpanded ? 'bg-gray-50' : 'bg-white'}`}>
-        <div className={`w-full flex ${isExpanded ? 'justify-end' : 'justify-center'} mb-2`}>
-          <Button onClick={onToggle} variant="ghost" size="icon">
-            {isExpanded ? <PanelLeft className="h-5 w-5" /> : <PanelRight className="h-5 w-5" />}
-          </Button>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto">
-          {isExpanded && (
-            <div className="mb-4">
-              <h3 className="font-semibold text-gray-800 mb-2 text-sm">현재 학습 주제</h3>
-              <div className="bg-blue-100 text-blue-800 px-2 py-1.5 rounded-lg text-xs font-medium">
-                #{currentTopic}
+    <div
+      className={cn(
+        "relative h-full flex flex-col bg-white border-r shadow-md transition-width duration-300 ease-in-out",
+        isExpanded ? "w-72" : "w-16"
+      )}
+    >
+      <div className="p-4 flex items-center justify-between border-b">
+        {isExpanded && (
+          <h2 className="font-bold text-lg text-gray-800">Learning Progress</h2>
+        )}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onToggle}
+        >
+          {isExpanded ? (
+            <ChevronsLeft className="h-5 w-5" />
+          ) : (
+            <ChevronsRight className="h-5 w-5" />
+          )}
+        </Button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {isExpanded ? (
+          <>
+            {/* Current Topic Section */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 text-sm font-semibold text-gray-700">
+                <Book className="h-5 w-5 flex-shrink-0" />
+                <span>Current Topic</span>
+              </div>
+              <div className="pl-8 text-gray-600 font-medium">{currentTopic}</div>
+            </div>
+
+            {/* Tutor Profile Section */}
+            <div className="space-y-3 pt-4 border-t">
+              <div className="flex items-center gap-3 text-sm font-semibold text-gray-700">
+                <User className="h-5 w-5 flex-shrink-0" />
+                <span>Your Tutor</span>
+              </div>
+              <div className="pl-8 flex items-center gap-3">
+                <img src={selectedPersonaImage} alt={personaName} className="w-12 h-12 rounded-full border-2 border-blue-200 object-cover" />
+                <div>
+                  <div className="font-bold text-gray-800">{personaName}</div>
+                  <div className="text-xs text-gray-500">for {userId}</div>
+                </div>
               </div>
             </div>
-          )}
 
-          <div>
-            {isExpanded && <h3 className="font-semibold text-gray-800 mb-3 text-sm">학습 진행도</h3>}
-            <div className="space-y-1.5">
-              {problems.map((problem) => (
-                <Tooltip key={problem.id} disableHoverableContent={isExpanded}>
-                  <TooltipTrigger asChild>
+            {/* Problems Section */}
+            <div className="space-y-2 pt-4 border-t">
+              <div className="flex items-center gap-3 text-sm font-semibold text-gray-700">
+                <CheckCircle className="h-5 w-5 flex-shrink-0" />
+                <span>Problems</span>
+              </div>
+              <ul className="pl-8 space-y-2">
+                {problems.map((problem) => (
+                  <li key={problem.id}>
                     <button
-                      onClick={() => onProblemClick(problem.id)}
-                      className={`
-                        w-full flex items-center gap-2 p-2.5 rounded-lg text-left transition-colors
-                        ${isExpanded ? 'justify-start' : 'justify-center'}
-                        ${currentProblemId === problem.id 
-                          ? 'bg-blue-100 border-blue-500' 
-                          : 'hover:bg-gray-100'
-                        }
-                        ${currentProblemId === problem.id && isExpanded ? 'border-l-4' : ''}
-                      `}
+                      onClick={() => onProblemSelect(problem.id)}
+                      disabled={problem.id !== currentProblemId}
+                      className={cn(
+                        "w-full text-left flex items-center gap-3 p-2 rounded-md transition-colors",
+                        "disabled:opacity-100 disabled:cursor-default",
+                        currentProblemId === problem.id
+                          ? "bg-blue-100 text-blue-800 font-bold"
+                          : "text-gray-600 hover:bg-gray-100"
+                      )}
                     >
-                      {problem.completed ? (
-                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                      ) : (
-                        <Circle className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                      )}
-                      {isExpanded && (
-                        <span className={`text-xs ${problem.completed ? 'text-green-700' : 'text-gray-700'}`}>
-                          {problem.title}
-                        </span>
-                      )}
+                      <CheckCircle
+                        className={cn(
+                          "h-5 w-5 flex-shrink-0",
+                          problem.completed ? "text-green-500" : "text-gray-400",
+                          currentProblemId === problem.id && "text-blue-700"
+                        )}
+                      />
+                      <span className="flex-1 truncate">{problem.title}</span>
                     </button>
-                  </TooltipTrigger>
-                  {!isExpanded && (
-                    <TooltipContent side="right">
-                      <p>{problem.title}</p>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              ))}
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
-        </div>
-      </Card>
-    </TooltipProvider>
+          </>
+        ) : null}
+      </div>
+    </div>
   );
 };
 
